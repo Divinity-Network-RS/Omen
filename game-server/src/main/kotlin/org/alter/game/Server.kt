@@ -170,6 +170,7 @@ class Server {
          * Initialize RSCM
          */
         RSCM.init()
+        RSCM.test()
 
         /*
          * Load the privileges for the game.
