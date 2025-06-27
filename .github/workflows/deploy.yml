@@ -1,0 +1,38 @@
+name: Build and Deploy Omen server.jar
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+
+      - name: Build the JAR
+        run: ./gradlew clean build
+
+      - name: Prepare SSH key
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Upload JAR to server
+        run: |
+          scp -i key.pem -o StrictHostKeyChecking=no build/libs/*.jar ${{ secrets.DEPLOY_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.DEPLOY_USER }}/omen/app.jar
+
+      - name: Restart service on server
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            sudo systemctl daemon-reexec
+            sudo systemctl restart omen.service
+          EOF
