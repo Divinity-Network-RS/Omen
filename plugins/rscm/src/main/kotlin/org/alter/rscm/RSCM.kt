@@ -49,7 +49,33 @@ object RSCM {
     }
 
     fun test() {
-        // @TODO Check if some values match what was expected.
+        val expectations = mapOf(
+            "quest.dwarf_remains" to 0,
+            "quest.toolkit" to 1,
+            "quest.cannonball" to 2,
+            "quest.insect_repellent_noted" to 29
+        )
+
+        var passed = 0
+        var failed = 0
+
+        for ((key, expectedValue) in expectations) {
+            try {
+                val actualValue = getRSCM(key)
+                if (actualValue == expectedValue) {
+                    logger.info { "PASS: $key = $actualValue" }
+                    passed++
+                } else {
+                    logger.error { "FAIL: $key expected $expectedValue but got $actualValue" }
+                    failed++
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "ERROR: $key threw exception" }
+                failed++
+            }
+        }
+
+        logger.info { "RSCM Test Complete: $passed passed, $failed failed." }
     }
 
 }
